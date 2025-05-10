@@ -312,6 +312,7 @@ def verify_email(window):
             print(f"Đã nhập số {digit} vào ô thứ {i+1}")
         except ElementNotFoundError:
             print(f"Không tìm thấy ô nhập mã thứ {i+1}")
+    time.sleep(3)
     with lock:
         last_mxn = None
 def check_verfiemail_challen(window,email):
@@ -514,7 +515,7 @@ def runn(email, password):
             time.sleep(2)
 
             verify_email(window)
-
+            time.sleep(5)
             data = [
                 [email, password]
             ]
