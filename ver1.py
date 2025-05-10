@@ -231,7 +231,8 @@ def fill_text_field(email,window, auto_id, text, timeout=5):
 def simulate_mouse_click(button):
     # Lấy vị trí giữa của control (vị trí click)
     global stop_mouse_thread
-    stop_mouse_thread = True
+    with lock:
+        stop_mouse_thread = True
     rect = button.rectangle()
     target_x = (rect.left + rect.right) // 2 + random.randint(-3, 3)
     target_y = (rect.top + rect.bottom) // 2 + random.randint(-3, 3)
@@ -242,7 +243,8 @@ def simulate_mouse_click(button):
     time.sleep(random.uniform(0.1, 0.3))  # Delay trước khi click
     pyautogui.click()
     time.sleep(random.uniform(0.3, 0.7))  # Delay sau khi click
-    stop_mouse_thread = False
+    with lock:
+        stop_mouse_thread = False
 
 def find_and_click_button(email,window, title, auto_id, control_type, timeout=5):
     
