@@ -2,8 +2,6 @@ import csv
 
 # Dữ liệu ban đầu để ghi đè vào file
 data = [
-    ['email', 'pass'],
-    ['user1@example.com', 'password1'],
     ['user2@example.com', 'password2']
 ]
 

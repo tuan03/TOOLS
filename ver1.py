@@ -298,11 +298,17 @@ def check_security_challenge(window,email):
     except ElementNotFoundError:
         print("Không có Security Challenge")
         return False
+import time
 def verify_email(window):
     global last_mxn
+    start_time = time.time()
+    timeout = 30  # giây
     while True:
         if last_mxn:
             break
+        if time.time() - start_time > timeout:
+            raise TimeoutError("Hết thời gian chờ: last_mxn vẫn là False sau 30 giây.")
+        time.sleep(0.1)  # tránh dùng 100% CPU
     for (i, digit) in enumerate(last_mxn):
         try:
             auto_id = f"ci-email-confirmation-input-{i}"

@@ -1,3 +1,7 @@
+GLOBAL_USER = "gynmp_shmil"
+GLOBAL_PASS = "xvVoAcoA"
+GLOBAL_IP = "117.0.205.144"
+GLOCAL_PORT = "15611"
 import tls_client
 import json
 import time
@@ -8,8 +12,8 @@ class TempMail:
     def __init__(self, bearer_token: str = None) -> None:
         # Cấu hình proxy
         PROXY = {
-            "http": "http://gynmp_shmil:xvVoAcoA@117.0.205.144:15611",
-            "https": "http://gynmp_shmil:xvVoAcoA@117.0.205.144:15611"
+            "http": f"http://{GLOBAL_USER}:{GLOBAL_PASS}@{GLOBAL_IP}:{GLOCAL_PORT}",
+            "https": f"http://{GLOBAL_USER}:{GLOBAL_PASS}@{GLOBAL_IP}:{GLOCAL_PORT}"
         }
 
         # Khởi tạo session tls-client
