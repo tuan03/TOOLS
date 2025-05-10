@@ -3,3 +3,4 @@ tls_client
 pywinauto
 pyautogui
 requests
+python-dotenv

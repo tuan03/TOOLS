@@ -1,7 +1,13 @@
-GLOBAL_USER = "gynmp_shmil"
-GLOBAL_PASS = "xvVoAcoA"
-GLOBAL_IP = "117.0.205.144"
-GLOCAL_PORT = "15611"
+from dotenv import load_dotenv
+import os
+load_dotenv()
+GLOBAL_USER = os.getenv("GLOCAL_USER")
+GLOBAL_PASS = os.getenv("GLOCAL_PASS")
+GLOBAL_IP = os.getenv("GLOCAL_IP")
+GLOCAL_PORT = os.getenv("GLOCAL_PORT")
+if not GLOBAL_USER or not GLOBAL_PASS or not GLOBAL_IP or not GLOCAL_PORT:
+    print("Email:Vui lòng kiểm tra lại thông tin proxy trong file .env")
+    exit()
 import tls_client
 import json
 import time

@@ -1,6 +1,11 @@
-GLOBAL_API_LINK = "https://api.enode.vn/getip/52daa2c23aef86f6bcec6589b63f7dd3adc1ee60"
-GLOBAL_PASSWORD =  "AmosIrvin6028"
-
+from dotenv import load_dotenv
+import os
+load_dotenv()
+GLOBAL_API_LINK = os.getenv("GLOBAL_API_LINK")
+GLOBAL_PASSWORD = os.getenv("GLOBAL_PASSWORD")
+if not GLOBAL_API_LINK or not GLOBAL_PASSWORD:
+    print("Vui lòng kiểm tra lại thông tin trong file .env")
+    exit()
 
 from pywinauto.application import Application
 from pywinauto import findwindows
