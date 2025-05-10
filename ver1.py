@@ -17,6 +17,7 @@ import re
 import requests
 from pywinauto.keyboard import send_keys
 import pyautogui
+import csv
 # Biến lưu giá trị
 last_email = None
 last_mxn = None
@@ -511,6 +512,13 @@ def runn(email, password):
             time.sleep(2)
 
             verify_email(window)
+
+            data = [
+                [email, password]
+            ]
+            with open('data.csv', mode='a', newline='', encoding='utf-8') as file:
+                writer = csv.writer(file)
+                writer.writerows(data)
 
             find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
             time.sleep(2)
