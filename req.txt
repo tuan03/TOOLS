@@ -1,0 +1,8 @@
+xlrd
+tls_client
+json
+re
+pywinauto
+pyautogui
+requests
+csv
