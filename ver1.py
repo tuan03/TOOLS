@@ -209,13 +209,14 @@ def connect_to_application():
 
 
 def simulate_typing(field, text):
-    for char in text:
-        if char == ' ':
-            send_keys('{SPACE}')  # Gửi phím cách явный
-        else:
-            field.type_keys(char)
-        # time.sleep(random.uniform(0.05, 0.1))  # Thêm độ trễ ngẫu nhiên giữa các ký tự
-    time.sleep(random.uniform(0.2, 0.3))
+    # for char in text:
+    #     if char == ' ':
+    #         send_keys('{SPACE}')  # Gửi phím cách явный
+    #     else:
+    #         field.type_keys(char)
+    #     # time.sleep(random.uniform(0.05, 0.1))  # Thêm độ trễ ngẫu nhiên giữa các ký tự
+    field.type_keys(text, with_spaces=True)
+    time.sleep(random.uniform(0.1, 0.3))
 
 def fill_text_field(email,window, auto_id, text, timeout=5):
     while True:
@@ -229,9 +230,8 @@ def fill_text_field(email,window, auto_id, text, timeout=5):
             print(f"Không tìm thấy ô {auto_id}. Đang tìm lại...")
             timeout-=1
             time.sleep(1)
-        finally:
-            if timeout <= 0:
-                raise Exception(f"Không tìm thấy ô {auto_id} sau thời gian chờ.")
+        if timeout <= 0:
+            raise Exception(f"Không tìm thấy ô {auto_id} sau thời gian chờ.")
 
 def simulate_mouse_click(button):
     # Lấy vị trí giữa của control (vị trí click)
@@ -281,12 +281,17 @@ def save_control_tree_to_file(window):
 def delete_folder(folder_name):
     base_path = r"D:\\TOOLS_KT\\1_Paypal\\Create_Paypal\\Create_Paypal\\Create_Paypal\\profile"
     target_path = os.path.join(base_path, folder_name)
-
-    if os.path.exists(target_path) and os.path.isdir(target_path):
-        shutil.rmtree(target_path)
-        print(f"Đã xóa thư mục: {target_path}")
-    else:
-        print(f"Thư mục không tồn tại: {target_path}")
+    while True:
+        try:
+            if os.path.exists(target_path) and os.path.isdir(target_path):
+                shutil.rmtree(target_path)
+                print(f"Đã xóa thư mục: {target_path}")
+            else:
+                print(f"Thư mục không tồn tại: {target_path}")
+            break
+        except PermissionError:
+            print(f"Không thể xóa thư mục {target_path} vì nó đang được sử dụng. Đợi 1 giây để thử lại...")
+            time.sleep(1)
 
 def check_security_challenge(window,email):
     try:
@@ -380,25 +385,25 @@ def runn(email, password):
         fill_text_field(email,window, auto_id="textEdit6", text=password)
 
         find_and_click_button(email,window, title="Create Profile", auto_id="btn_newprofile", control_type="Button")
-        time.sleep(random.uniform(7, 10)) 
+        time.sleep(random.uniform(3, 5)) 
 
         # Bước 3: Nhấn nút Go
         find_and_click_button(email,window, title="Go", auto_id="btn_go", control_type="Button")
-        time.sleep(5)  # Đợi 3 giây để tải trang
+        time.sleep(4)  # Đợi 3 giây để tải trang
         # Bước 4: Nhấn nút Sign Up
         find_and_click_button(email,window, title="Sign Up", auto_id="_signup-button_1j7nc_1", control_type="Hyperlink")
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(2, 4)) 
         #Chấp nhận cookie
         find_and_click_button(email,window, title="Yes, Accept Cookies", auto_id="acceptAllButton", control_type="Button", timeout=1)
         time.sleep(1) 
         # Bước 5: Nhấn nút Next
         find_and_click_button(email,window, title="Next", auto_id="next-btn", control_type="Button")
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(1, 2)) 
 
 
         fill_text_field(email,window, auto_id="paypalAccountData_email", text=email)
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_submit", control_type="Button")
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(1, 2)) 
 
         if check_security_challenge(window,email) == True:
             print("Bị bắt xác thực")
@@ -406,30 +411,30 @@ def runn(email, password):
 
         fill_text_field(email,window, auto_id="paypalAccountData_phone", text=sdt)
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_submit", control_type="Button")
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(1, 2)) 
 
         fill_text_field(email,window, auto_id="paypalAccountData_password", text=password)
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_submit", control_type="Button")
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(1, 2)) 
 
         fill_text_field(email,window, auto_id="paypalAccountData_lastName", text=family)
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
         fill_text_field(email,window, auto_id="paypalAccountData_middleName", text=middle) 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
         fill_text_field(email,window, auto_id="paypalAccountData_firstName", text=given) 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
 
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_emailPassword", control_type="Button") #chưa chuẩn
-        time.sleep(random.uniform(2, 3)) 
+        time.sleep(random.uniform(0.5, 0.8)) 
 
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_emailPassword", control_type="Button") #chưa chuẩn
-        time.sleep(random.uniform(3, 4)) 
+        time.sleep(random.uniform(0.5, 0.8)) 
 
 
         fill_text_field(email,window, auto_id="paypalAccountData_identificationNum", text=cccd) 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
         fill_text_field(email,window, auto_id="paypalAccountData_dob", text=nam_sinh) #MMDDYYYY 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
 
         find_and_click_button(email,window, title="Next", auto_id="paypalAccountData_emailPassword", control_type="Button") #chuẩn
         time.sleep(random.uniform(3, 4)) 
@@ -437,9 +442,9 @@ def runn(email, password):
 
         
         fill_text_field(email,window, auto_id="paypalAccountData_address1_0", text=address) 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
         fill_text_field(email,window, auto_id="paypalAccountData_city_0", text=town) 
-        time.sleep(random.uniform(0.2, 0.8)) 
+        time.sleep(random.uniform(0.1, 0.4)) 
 
 
 
@@ -458,13 +463,13 @@ def runn(email, password):
             control_type="CheckBox"
         )
         checkbox_promo.click_input()
-        time.sleep(2)  # Đợi 3 giây để tải trang
+        time.sleep(1)  # Đợi 3 giây để tải trang
 
         scroll_to_bottom(window)
 
 
         find_and_click_button(email,window, title="Larger city / Province", auto_id="dropdownMenuButton_paypalAccountData_state_0", control_type="Button") #chuẩn
-        time.sleep(2)  # Đợi 3 giây để tải trang
+        time.sleep(1.5)  # Đợi 3 giây để tải trang
         find_and_click_button(email,window,title="An Giang", auto_id="smenu_item_An Giang", control_type="ListItem")
     
         
@@ -472,12 +477,12 @@ def runn(email, password):
         
         time.sleep(2)  # Đợi 3 giây để tải trang
         find_and_click_button(email,window,title="Agree and Create account", auto_id="paypalAccountData_emailPassword", control_type="Button")
-        time.sleep(8)
+        time.sleep(3)
 
         
     
         find_and_click_button(email,window, title="Not now", auto_id="paypalAccountData_notNow", control_type="Hyperlink")
-        time.sleep(5)
+        time.sleep(2)
 
         # Truy cập vào Document chứa nội dung web
         document = window.child_window(title="PayPal: Wallet", control_type="Document")
@@ -513,7 +518,7 @@ def runn(email, password):
             print("Tài khoản lỗi")
 
             find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
-            time.sleep(3)
+            time.sleep(6)
             delete_folder(email) # xóa profile
             
 
@@ -521,7 +526,7 @@ def runn(email, password):
             print("Tài khoản thành công")
             time.sleep(2)
             find_and_click_button(email,window,title="Settings", auto_id="header-settings", control_type="Hyperlink")
-            time.sleep(5)
+            time.sleep(4)
             find_and_click_button(email,window,title="Confirm Your Email", auto_id="interstitial-button-1", control_type="Button")
             time.sleep(2)
 
@@ -535,7 +540,7 @@ def runn(email, password):
                 writer.writerows(data)
 
             find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
-            time.sleep(2)
+            time.sleep(5)
         # loginn = child_window(title="All done? We’ll log you out in a few moments. Stay Logged In", control_type="Group")
         # loginn.click_input()
 
