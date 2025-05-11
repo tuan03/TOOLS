@@ -26,8 +26,10 @@ import csv
 # Biến lưu giá trị
 last_email = None
 last_mxn = None
+lock_email = threading.Lock()
 lock = threading.Lock()
 stop_mouse_thread = False
+event_mouse_exit = False
 url = GLOBAL_API_LINK
 
 import pandas as pd
@@ -266,7 +268,7 @@ def find_and_click_button(email,window, title, auto_id, control_type, timeout=5)
             print(f"Lỗi khi tìm/nhấn nút: {e}")
         
         timeout -= 1
-        if timeout <= 0:
+        if timeout <= 1:
             raise Exception(f"Không tìm thấy ô {auto_id} sau thời gian chờ.")
 
         time.sleep(1)
@@ -281,17 +283,15 @@ def save_control_tree_to_file(window):
 def delete_folder(folder_name):
     base_path = r"D:\\TOOLS_KT\\1_Paypal\\Create_Paypal\\Create_Paypal\\Create_Paypal\\profile"
     target_path = os.path.join(base_path, folder_name)
-    while True:
-        try:
-            if os.path.exists(target_path) and os.path.isdir(target_path):
-                shutil.rmtree(target_path)
-                print(f"Đã xóa thư mục: {target_path}")
-            else:
-                print(f"Thư mục không tồn tại: {target_path}")
-            break
-        except PermissionError:
-            print(f"Không thể xóa thư mục {target_path} vì nó đang được sử dụng. Đợi 1 giây để thử lại...")
-            time.sleep(1)
+
+    try:
+        if os.path.exists(target_path) and os.path.isdir(target_path):
+            shutil.rmtree(target_path)
+            print(f"Đã xóa thư mục: {target_path}")
+        else:
+            print(f"Thư mục không tồn tại: {target_path}")
+    except PermissionError:
+        print(f"Không thể xóa thư mục {target_path} vì nó đang được sử dụng.")
 
 def check_security_challenge(window,email):
     try:
@@ -314,8 +314,9 @@ def verify_email(window):
     start_time = time.time()
     timeout = 30  # giây
     while True:
-        if last_mxn:
-            break
+        with lock_email:
+            if last_mxn:
+                break
         if time.time() - start_time > timeout:
             raise TimeoutError("Hết thời gian chờ: last_mxn vẫn là False sau 30 giây.")
         time.sleep(0.1)  # tránh dùng 100% CPU
@@ -329,7 +330,7 @@ def verify_email(window):
         except ElementNotFoundError:
             print(f"Không tìm thấy ô nhập mã thứ {i+1}")
     time.sleep(3)
-    with lock:
+    with lock_email:
         last_mxn = None
 def check_verfiemail_challen(window,email):
     try:
@@ -367,7 +368,9 @@ def runn(email, password):
     window = connect_to_application()
 
     global stop_mouse_thread
+    global event_mouse_exit
     stop_mouse_thread = False
+    event_mouse_exit = False
     panel = window.child_window(title="panelControl6", auto_id="panelControl6", control_type="Pane")
     t = threading.Thread(target=mouse_mover_thread, args=(panel,), daemon=True)
     t.start()
@@ -477,12 +480,18 @@ def runn(email, password):
         
         time.sleep(2)  # Đợi 3 giây để tải trang
         find_and_click_button(email,window,title="Agree and Create account", auto_id="paypalAccountData_emailPassword", control_type="Button")
+        time.sleep(1)  # Đợi 3 giây để tải trang
+        try:
+            find_and_click_button(email,window,title="Agree and Create account", auto_id="paypalAccountData_emailPassword", control_type="Button")
+        except Exception as e:
+            print(f"Đã nhấn thành công rồi: {e}")
+
         time.sleep(3)
 
         
     
         find_and_click_button(email,window, title="Not now", auto_id="paypalAccountData_notNow", control_type="Hyperlink")
-        time.sleep(2)
+        time.sleep(5)
 
         # Truy cập vào Document chứa nội dung web
         document = window.child_window(title="PayPal: Wallet", control_type="Document")
@@ -496,16 +505,20 @@ def runn(email, password):
             document.type_keys("{DOWN}")
             time.sleep(0.3)  # Đợi một chút để giao diện cập nhật
 
+        time.sleep(0.5)  # Đợi một chút để cuộn hoàn tất
+        find_and_click_button(email,window, title="Not now", auto_id=None, control_type="Hyperlink")
         # Tùy chọn: Kiểm tra xem liên kết "Not now" có hiển thị không
-        not_now_link = document.child_window(title="Not now", control_type="Hyperlink")
-        if not_now_link.exists():
-            print("Liên kết 'Not now' đã hiển thị.")
-            not_now_link.set_focus()  # Focus vào liên kết
-            not_now_link.click_input()
-            print("Đã nhấn vào liên kết 'Not now'.")
-        else:
-            print("Không tìm thấy liên kết 'Not now'.")
+        # not_now_link = document.child_window(title="Not now", control_type="Hyperlink")
+        # if not_now_link.exists():
+        #     print("Liên kết 'Not now' đã hiển thị.")
+        #     # not_now_link.set_focus()  # Focus vào liên kết
+        #     # not_now_link.click_input()
+            
+        #     print("Đã nhấn vào liên kết 'Not now'.")
+        # else:
+        #     print("Không tìm thấy liên kết 'Not now'.")
 
+        time.sleep(2)  # Đợi 3 giây để tải trang
 
         try:
             # Thử tìm Hyperlink
@@ -528,7 +541,7 @@ def runn(email, password):
             find_and_click_button(email,window,title="Settings", auto_id="header-settings", control_type="Hyperlink")
             time.sleep(4)
             find_and_click_button(email,window,title="Confirm Your Email", auto_id="interstitial-button-1", control_type="Button")
-            time.sleep(2)
+            time.sleep(3)
 
             verify_email(window)
             time.sleep(5)
@@ -546,11 +559,16 @@ def runn(email, password):
 
     except Exception as e:
         print(f"Lỗi trong quá trình thực hiện: {e}")
+        with lock:
+            stop_mouse_thread = True
+            event_mouse_exit = True
         find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
         time.sleep(5)
         delete_folder(email) # xóa profile
     finally:
-        stop_mouse_thread = True
+        with lock:
+            stop_mouse_thread = True
+            event_mouse_exit = True
         t.join()
         print("Kết thúc Một lần")
         # Xử lý lỗi nếu cần thiết
@@ -620,7 +638,7 @@ def reader_thread_fn(process):
             if not line:
                 continue
 
-            with lock:
+            with lock_email:
                 if m := email_pattern.match(line):
                     last_email = m.group(1)
                     print(f"[Thread] ==> Email nhận được: {last_email}")
@@ -661,7 +679,11 @@ def mouse_mover_thread(panel):
         last_mouse_pos = pyautogui.position()
     idle_timeout = 1.5
 
-    while not stop_mouse_thread:
+    while not event_mouse_exit:
+        with lock:
+            if stop_mouse_thread:
+                continue
+        time.sleep(0.1)
         current_mouse_pos = pyautogui.position()
 
         if current_mouse_pos.x != last_mouse_pos[0] or current_mouse_pos.y != last_mouse_pos[1]:
@@ -673,6 +695,7 @@ def mouse_mover_thread(panel):
         y = random.randint(top + 10, bottom - 200)
         last_mouse_pos = (x,y)
         pyautogui.moveTo(x, y, duration=random.uniform(0.1, 0.5))
+        time.sleep(random.uniform(0.1, 0.5))  # Thời gian di chuyển chuột
 
 while True:
     while True: 
@@ -684,8 +707,10 @@ while True:
     last_mxn = None
     start_watcher()
     while True:
-        with lock:
+        with lock_email:
             if last_email:
                 break
     runn(last_email, GLOBAL_PASSWORD)
+
+
     
