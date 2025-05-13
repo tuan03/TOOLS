@@ -5,3 +5,7 @@ testt.py
 data.csv
 .env
 temp
+mailer.py
+build.cmd
+mailer.spec
+build
