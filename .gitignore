@@ -10,3 +10,5 @@ build.cmd
 mailer.spec
 build
 ver2/.env
+appVer2.py
+appVer2.spec
