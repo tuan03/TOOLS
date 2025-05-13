@@ -192,7 +192,7 @@ def runn(email, password):
         find_and_interact_with_control(window, "ListItem", f"smenu_item_{tinh}", "click")
 
         find_and_interact_with_control(window, "Button", "paypalAccountData_emailPassword", "click")
-        
+        time.sleep(6)
         go_to_url(window,"https://paypal.com")
 
         try:
@@ -379,7 +379,6 @@ while True:
             if last_email:
                 break
     runn(last_email, GLOBAL_PASSWORD)
-    break
 
 
     
