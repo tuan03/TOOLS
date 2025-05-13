@@ -4,13 +4,9 @@ load_dotenv()
 GLOBAL_API_LINK = os.getenv("GLOBAL_API_LINK")
 GLOBAL_PASSWORD = os.getenv("GLOBAL_PASSWORD")
 PATH_PROFILE = os.getenv("PATH_PROFILE")
-KEY_GEN_MAIL = os.getenv("KEY_GEN_MAIL")
-if not GLOBAL_API_LINK or not GLOBAL_PASSWORD or not PATH_PROFILE or not KEY_GEN_MAIL:
-    print("Vui lòng kiểm tra lại thông tin trong file .env")
+if not GLOBAL_API_LINK or not GLOBAL_PASSWORD or not PATH_PROFILE:
+    print("Vui lòng kiểm tra lại thông tin trong file .env",flush=True)
     exit()
-import sys
-sys.path.insert(0, 'tools')  # Thêm thư mục 'dist' vào đường dẫn tìm module
-import gen_mail
 from pywinauto.application import Application
 from pywinauto import findwindows
 import time
@@ -47,7 +43,7 @@ def connect_to_application():
         app = Application(backend="uia").connect(path="WebBrowser.exe", timeout=10)
         return app.top_window()  # Trả về cửa sổ chính
     except findwindows.ElementNotFoundError:
-        print("Không tìm thấy ứng dụng WebBrowser.exe. Vui lòng đảm bảo ứng dụng đang chạy.")
+        print("Không tìm thấy ứng dụng WebBrowser.exe. Vui lòng đảm bảo ứng dụng đang chạy.",flush=True)
         exit(1)
 
 def delete_folder(folder_name):
@@ -56,11 +52,11 @@ def delete_folder(folder_name):
     try:
         if os.path.exists(target_path) and os.path.isdir(target_path):
             shutil.rmtree(target_path)
-            print(f"Đã xóa thư mục: {target_path}")
+            print(f"Đã xóa thư mục: {target_path}",flush=True)
         else:
-            print(f"Thư mục không tồn tại: {target_path}")
+            print(f"Thư mục không tồn tại: {target_path}",flush=True)
     except PermissionError:
-        print(f"Không thể xóa thư mục {target_path} vì nó đang được sử dụng.")
+        print(f"Không thể xóa thư mục {target_path} vì nó đang được sử dụng.",flush=True)
 
 def check_security_challenge(window,email):
     try:
@@ -69,19 +65,19 @@ def check_security_challenge(window,email):
             control_type="Text"
         )
         element.wrapper_object()  # Nếu không tồn tại sẽ raise lỗi
-        print("Phát hiện Security Challenge")
+        print("Phát hiện Security Challenge",flush=True)
         click_create_acc(window,auto_id="btn_restart", control_type="Button")
         time.sleep(2)
         delete_folder(email) # xóa profile
         return True
     except ElementNotFoundError:
-        print("Không có Security Challenge")
+        print("Không có Security Challenge",flush=True)
         return False
 import time
 def verify_email(window):
     global last_mxn
     start_time = time.time()
-    timeout = 30  # giây
+    timeout = 60  # giây
     while True:
         with lock_email:
             if last_mxn:
@@ -95,9 +91,9 @@ def verify_email(window):
             spinner = window.child_window(auto_id=auto_id, control_type="Spinner")
             spinner.set_focus()
             spinner.type_keys(digit, with_spaces=True)
-            print(f"Đã nhập số {digit} vào ô thứ {i+1}")
+            print(f"Đã nhập số {digit} vào ô thứ {i+1}",flush=True)
         except ElementNotFoundError:
-            print(f"Không tìm thấy ô nhập mã thứ {i+1}")
+            print(f"Không tìm thấy ô nhập mã thứ {i+1}",flush=True)
     time.sleep(3)
     with lock_email:
         last_mxn = None
@@ -107,11 +103,11 @@ def check_verfiemail_challen(window,email):
             title="Confirm your email", auto_id="paypalAccountData_emailVerificationModalHeading", control_type="Text"
         )
         element.wrapper_object()  # Nếu không tồn tại sẽ raise lỗi
-        print("Phát hiện Email Challenge")
+        print("Phát hiện Email Challenge",flush=True)
         verify_email(window)
         return True
     except ElementNotFoundError:
-        print("Không có Email Challenge")
+        print("Không có Email Challenge",flush=True)
         return False
 
 
@@ -147,7 +143,7 @@ def runn(email, password):
         find_and_interact_with_control(window, "Button", "paypalAccountData_submit", "click")
         time.sleep(3)  # Đợi 3 giây để tải trang
         if check_security_challenge(window,email) == True:
-            print("Bị bắt xác thực")
+            print("Bị bắt xác thực",flush=True)
             return
 
         find_and_interact_with_control(window, "Edit", "paypalAccountData_phone", "type", text=sdt)
@@ -203,7 +199,7 @@ def runn(email, password):
             )
             hyperlink.wrapper_object()  # Nếu không có sẽ raise lỗi
 
-            print("Tài khoản lỗi")
+            print("Tài khoản lỗi",flush=True)
 
             click_create_acc(window,auto_id="btn_restart", control_type="Button")
             time.sleep(6)
@@ -218,12 +214,12 @@ def runn(email, password):
                     control_type="Hyperlink"
                 )
                 hyperlink.wrapper_object()  # Nếu không có sẽ raise lỗi
-                print("Tài khoản lỗi limit")
+                print("Tài khoản lỗi limit",flush=True)
                 click_create_acc(window,auto_id="btn_restart", control_type="Button")
                 time.sleep(6)
                 delete_folder(email) # xóa profile
             except ElementNotFoundError:
-                print("Tài khoản thành công")
+                print("Tài khoản thành công",flush=True)
                 time.sleep(2)
                 find_and_interact_with_control(window, "Hyperlink", "header-settings", "click")
                 time.sleep(4)
@@ -231,38 +227,20 @@ def runn(email, password):
                 time.sleep(3)
 
                 verify_email(window)
+                print("KEY GEN MAIL: __BANCHDKAKLSAKLDKMCNJSNXJS_;MAIL{"+email+"};{"+password+"}",flush=True)
                 
-                data = [
-                    [email, password]
-                ]
-                url = "http://deliveriq.click/api/append"  # Thay bằng domain thực tế nếu cần
-                key = gen_mail.decode(KEY_GEN_MAIL)
-                data = {
-                    "ten": key,
-                    "thoigian": datetime.now().strftime("%H:%M_%d/%m/%Y"),
-                    "email": email,
-                    "pass": password
-                }
-                try:
-                    requests.post(url, json=data)
-                except Exception as e:
-                    print("Liên Hệ Tuấn Ngay !!!!")
-
-                with open('data.csv', mode='a', newline='', encoding='utf-8') as file:
-                    writer = csv.writer(file)
-                    writer.writerows(data)
                 time.sleep(5)
                 click_create_acc(window,auto_id="btn_restart", control_type="Button")
                 time.sleep(5)
 
 
     except Exception as e:
-        print(f"Lỗi trong quá trình thực hiện: {e}")
+        print(f"Lỗi trong quá trình thực hiện: {e}",flush=True)
         click_create_acc(window,auto_id="btn_restart", control_type="Button")
         time.sleep(5)
         delete_folder(email) # xóa profile
     finally:
-        print("Kết thúc Một lần")
+        print("Kết thúc Một lần",flush=True)
         # Xử lý lỗi nếu cần thiết
 
 
@@ -275,38 +253,38 @@ def reset_server():
 
         if data.get("status") == "success":
             info = data.get("info", {})
-            print("✅ Đổi IP thành công:")
-            print("✅ Vui lòng đợi 10s...")
+            print("✅ Đổi IP thành công:",flush=True)
+            print("✅ Vui lòng đợi 10s...",flush=True)
             time.sleep(10)
             return True
 
         elif data.get("status") == "error":
             error_msg = data.get("error", "")
-            print("⚠️ Lỗi:", error_msg)
+            print("⚠️ Lỗi:", error_msg,flush=True)
 
             # Trích số giây cần chờ
             match = re.search(r'(\d+)\s*giây', error_msg)
             if match:
                 wait_seconds = int(match.group(1)) + 3
-                print(f"⏳ Chờ {wait_seconds} giây trước khi thử lại...")
+                print(f"⏳ Chờ {wait_seconds} giây trước khi thử lại...",flush=True)
                 # time.sleep(wait_seconds)
                 for i in range(wait_seconds, 0, -1):
                     print(f"⏳ Còn {i} giây...", end='\r', flush=True)
                     time.sleep(1)
-                print()
+                print(flush=True)
                 return False
             else:
-                print("Không xác định thời gian chờ.")
+                print("Không xác định thời gian chờ.",flush=True)
                 return False
         else:
-            print("❓ Phản hồi không xác định:", data)
+            print("❓ Phản hồi không xác định:", data,flush=True)
             return False
 
     except requests.RequestException as e:
-        print("❌ Request lỗi:", e)
+        print("❌ Request lỗi:", e,flush=True)
         return False
     except ValueError:
-        print("❌ Không phải JSON hợp lệ.")
+        print("❌ Không phải JSON hợp lệ.",flush=True)
         return False
 # Regex
 email_pattern = re.compile(r"^Email:\s*(.+)$")
@@ -333,13 +311,13 @@ def reader_thread_fn(process):
             with lock_email:
                 if m := email_pattern.match(line):
                     last_email = m.group(1)
-                    print(f"[Thread] ==> Email nhận được: {last_email}")
+                    print(f"[Thread] ==> Email nhận được: {last_email}",flush=True)
                 elif m := mxn_pattern.match(line):
                     last_mxn = m.group(1)
-                    print(f"[Thread] ==> MXN nhận được: {last_mxn}")
+                    print(f"[Thread] ==> MXN nhận được: {last_mxn}",flush=True)
 
     except Exception as e:
-        print(f"[Thread] Lỗi: {e}")
+        print(f"[Thread] Lỗi: {e}",flush=True)
 
 def start_watcher():
     global current_process, current_thread
@@ -357,20 +335,17 @@ def start_watcher():
         env=env,
         creationflags=subprocess.CREATE_NO_WINDOW
     )
-    print("[Main] Đã khởi động tiến trình con mailer.py")
+    print("[Main] Đã khởi động tiến trình con mailer.py",flush=True)
     current_thread = threading.Thread(target=reader_thread_fn, args=(current_process,), daemon=True)
     current_thread.start()
 
-key = gen_mail.decode(KEY_GEN_MAIL)
-if key is None:
-    print("Generate email thất bại do sai KEY")
-    exit(0)
+
 while True:
     while True: 
         status = reset_server()
         if status:
             break
-    print("[Main] 🔁 Đang khởi động lại server PROXY")
+    print("[Main] 🔁 Đang khởi động lại server PROXY",flush=True)
     last_email = None
     last_mxn = None
     start_watcher()
@@ -380,5 +355,3 @@ while True:
                 break
     runn(last_email, GLOBAL_PASSWORD)
 
-
-    
