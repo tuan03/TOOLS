@@ -12,14 +12,10 @@ from pywinauto import findwindows
 pyautogui.FAILSAFE = True  # Kích hoạt chế độ an toàn
 pyautogui.PAUSE = random.uniform(0.01, 0.03)  # Thêm độ trễ nhỏ sau mỗi hành động
 
-def click_create_acc(window):
+def click_create_acc(window,auto_id="btn_newprofile", control_type="Button"):
     # Tìm control theo tên (panel)
-    panel = window.child_window( auto_id="btn_newprofile", control_type="Button")
+    panel = window.child_window( auto_id=auto_id, control_type=control_type)
     panel_rect = panel.rectangle() 
-    x = (panel_rect.left + panel_rect.right) // 2
-    y = (panel_rect.top + panel_rect.bottom) // 2
-    pyautogui.doubleClick(x, y)
-
     x = (panel_rect.left + panel_rect.right ) // 2
     y = (panel_rect.top + panel_rect.bottom) // 2
     pyautogui.click(x, y)

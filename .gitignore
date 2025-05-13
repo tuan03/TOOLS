@@ -9,3 +9,4 @@ mailer.py
 build.cmd
 mailer.spec
 build
+ver2/.env
