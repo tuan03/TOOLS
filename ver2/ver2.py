@@ -325,7 +325,6 @@ def start_watcher():
     if current_process:
         current_process.terminate()
         current_process.wait()
-
     current_process = subprocess.Popen(
         ['./dist/mailer.exe'],
         stdout=subprocess.PIPE,
@@ -338,20 +337,40 @@ def start_watcher():
     print("[Main] Đã khởi động tiến trình con mailer.py",flush=True)
     current_thread = threading.Thread(target=reader_thread_fn, args=(current_process,), daemon=True)
     current_thread.start()
-
-
-while True:
-    while True: 
-        status = reset_server()
-        if status:
-            break
-    print("[Main] 🔁 Đang khởi động lại server PROXY",flush=True)
-    last_email = None
-    last_mxn = None
-    start_watcher()
+def stop_process(myprocess):
+    if myprocess.poll() is None:
+        print("Đang kết thúc tiến trình Mailer...")
+        myprocess.terminate()  # Cách nhẹ nhàng
+        try:
+            myprocess.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            print("Tiến trình mailer không phản hồi, buộc dừng...")
+            myprocess.kill()  # Cách mạnh nếu terminate không hiệu quả
+try:
     while True:
-        with lock_email:
-            if last_email:
+        a = None 
+        while True: 
+            status = reset_server()
+            if status:
                 break
-    runn(last_email, GLOBAL_PASSWORD)
+        print("[Main] 🔁 Đang khởi động lại server PROXY",flush=True)
+        last_email = None
+        last_mxn = None
+        start_watcher()
+        while True:
+            with lock_email:
+                if last_email:
+                    break
+        runn(last_email, GLOBAL_PASSWORD)
+        if current_process:
+            stop_process(current_process)
+            current_process = None
+except Exception as e:
+    print("Có Lỗi")
+finally:
+    print("App bị dừng đột ngột")
+    if current_process:
+        current_process.terminate()
+        current_process.wait()
+    sys.exit(1)
 
