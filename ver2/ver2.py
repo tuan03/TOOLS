@@ -326,7 +326,7 @@ def start_watcher():
         current_process.terminate()
         current_process.wait()
     current_process = subprocess.Popen(
-        ['./dist/mailer.exe'],
+        ['./dist/mailer_nakskw.exe'],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -362,15 +362,30 @@ try:
                 if last_email:
                     break
         runn(last_email, GLOBAL_PASSWORD)
-        if current_process:
-            stop_process(current_process)
-            current_process = None
+        powershell_command = '''
+        Get-Process | Where-Object { $_.Name -like "*mailer_nakskw*" } | ForEach-Object { Stop-Process -Id $_.Id -Force }
+        '''
+
+        # Gọi PowerShell từ Python
+        try:
+            subprocess.run(["powershell", "-Command", powershell_command], check=True)
+            print("Đã dừng tất cả tiến trình chứa 'mailer_nakskw'.")
+        except subprocess.CalledProcessError as e:
+            print("Có lỗi khi dừng tiến trình:", e)
+        current_process = None
 except Exception as e:
     print("Có Lỗi")
 finally:
     print("App bị dừng đột ngột")
-    if current_process:
-        current_process.terminate()
-        current_process.wait()
+    powershell_command = '''
+    Get-Process | Where-Object { $_.Name -like "*mailer_nakskw*" } | ForEach-Object { Stop-Process -Id $_.Id -Force }
+    '''
+
+    # Gọi PowerShell từ Python
+    try:
+        subprocess.run(["powershell", "-Command", powershell_command], check=True)
+        print("Đã dừng tất cả tiến trình chứa 'mailer_nakskw'.")
+    except subprocess.CalledProcessError as e:
+        print("Có lỗi khi dừng tiến trình:", e)
     sys.exit(1)
 

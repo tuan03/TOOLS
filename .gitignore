@@ -12,3 +12,5 @@ build
 ver2/.env
 appVer2.py
 appVer2.spec
+ver2/appVer2.py
+ver2/mailer.py
